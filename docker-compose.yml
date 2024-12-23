@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: ./docker/dev
+      args:
+        USERNAME: ${DEV_USER:-devuser}
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    container_name: dev-environment
+    restart: unless-stopped
+    ports:
+      - "${SSH_PORT:-2222}:22"
+    volumes:
+      - ${WORKSPACE_PATH:-./workspace}:/home/${DEV_USER:-devuser}/workspace
+      - ./ssh/authorized_keys:/run/secrets/authorized_keys:ro
+    environment:
+      - TZ=${TZ:-UTC}
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - NET_BIND_SERVICE
+      - AUDIT_WRITE
+      - SYS_ADMIN
+      - MKNOD
+      - SYS_CHROOT
+      - SETFCAP
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
